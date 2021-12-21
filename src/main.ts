@@ -5,7 +5,7 @@ import type Song from './Song';
 const GUILD_ID = '790647809460142080';
 
 // Change this value in prod or set it to use same origin
-const socket = io('https://ogs-player.herokuapp.com:3000', {});
+const socket = io('https://ogs-player.herokuapp.com', {});
 
 const defaultProps = {
   socket: undefined,
