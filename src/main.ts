@@ -2,7 +2,7 @@ import io from 'socket.io-client';
 import App from './App.svelte';
 import type Song from './Song';
 
-const GUILD_ID = '790647809460142080';
+const GUILD_ID = '700471481162793001';
 
 // Change this value in prod or set it to use same origin
 const socket = io('https://ogs-player.herokuapp.com', {});
