@@ -5,6 +5,7 @@
   import { blur, scale } from "svelte/transition";
   import type Song from "./Song";
   import _ from "lodash";
+import { onMount } from "svelte";
   
   export let socket: Socket | undefined;
   export let socketMessage: string | undefined;
@@ -16,6 +17,19 @@
   
   let showLyrics: boolean = false;
   let elapsedPercent: number;
+
+  onMount(() => {
+    new Image().src = 'assets/stopped.png';
+    new Image().src = 'icons/rewind.png';
+    new Image().src = 'icons/play.png';
+    new Image().src = 'icons/pause.png';
+    new Image().src = 'icons/skip.png';
+    new Image().src = 'icons/sound-empty.png';
+    new Image().src = 'icons/sound-full.png';
+    new Image().src = 'icons/lyrics';
+    new Image().src = 'icons/wave.png';
+    new Image().src = 'icons/queue.png';
+  });
   
   function rewind() {
     alert("This isn't gonna be implemented until way later");
