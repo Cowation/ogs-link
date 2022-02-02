@@ -1,12 +1,12 @@
 <script lang="ts">
   import type { Socket } from "socket.io-client";
-  import { tweened } from 'svelte/motion';
-  import { cubicOut } from 'svelte/easing';
+  import { tweened } from "svelte/motion";
+  import { cubicOut } from "svelte/easing";
   import { blur, scale } from "svelte/transition";
   import type Song from "./Song";
   import _ from "lodash";
-import { onMount } from "svelte";
-  
+  import { onMount } from "svelte";
+
   export let socket: Socket | undefined;
   export let socketMessage: string | undefined;
   export let song: Song | undefined;
@@ -14,133 +14,199 @@ import { onMount } from "svelte";
   export let paused: boolean;
   export let stopped: boolean;
   export let nowLyricIndex: number | undefined;
-  
+
   let showLyrics: boolean = false;
   let elapsedPercent: number;
 
   onMount(() => {
-    new Image().src = 'assets/stopped.png';
-    new Image().src = 'icons/rewind.png';
-    new Image().src = 'icons/play.png';
-    new Image().src = 'icons/pause.png';
-    new Image().src = 'icons/skip.png';
-    new Image().src = 'icons/sound-empty.png';
-    new Image().src = 'icons/sound-full.png';
-    new Image().src = 'icons/lyrics';
-    new Image().src = 'icons/wave.png';
-    new Image().src = 'icons/queue.png';
+    new Image().src = "assets/stopped.png";
+    new Image().src = "icons/rewind.png";
+    new Image().src = "icons/play.png";
+    new Image().src = "icons/pause.png";
+    new Image().src = "icons/skip.png";
+    new Image().src = "icons/sound-empty.png";
+    new Image().src = "icons/sound-full.png";
+    new Image().src = "icons/lyrics";
+    new Image().src = "icons/wave.png";
+    new Image().src = "icons/queue.png";
   });
-  
+
   function rewind() {
     alert("This isn't gonna be implemented until way later");
   }
-  
+
   function togglePaused() {
-    socket.emit('EMIT_PAUSED');
+    socket.emit("EMIT_PAUSED");
   }
 
-  const skip = _.throttle(function() {
-    socket.emit('EMIT_SKIP');
+  const skip = _.throttle(function () {
+    socket.emit("EMIT_SKIP");
   }, 2000);
-  
-  const onVolumeChange = _.debounce(function() {
-    socket.emit('EMIT_VOLUME', volume);
+
+  const onVolumeChange = _.debounce(function () {
+    socket.emit("EMIT_VOLUME", volume);
   }, 250);
-  
+
   const lyricsPosition = tweened(0);
 
-  const toggleLyricsShown = _.throttle(function() {
+  const toggleLyricsShown = _.throttle(function () {
     showLyrics = !showLyrics;
   }, 1000);
 
   $: {
     if (nowLyricIndex) {
-      const mainLyric = document.querySelector(`#lyrics > p:nth-child(${ nowLyricIndex + 1 })`) as HTMLElement;
+      const mainLyric = document.querySelector(
+        `#lyrics > p:nth-child(${nowLyricIndex + 1})`
+      ) as HTMLElement;
 
       if (mainLyric) {
         const yPosition = nowLyricIndex === -1 ? 0 : mainLyric.offsetTop - 200;
         lyricsPosition.set(yPosition, {
           duration: 500,
-          easing: cubicOut
+          easing: cubicOut,
         });
       }
     }
   }
 
   lyricsPosition.subscribe((value: number) => {
-    const lyricsDiv = document.getElementById('lyrics');
+    const lyricsDiv = document.getElementById("lyrics");
     if (lyricsDiv) {
       lyricsDiv.scrollTop = value;
     }
   });
 
   $: {
-    const bg = !stopped ? song.art : 'assets/background.png'
+    const bg = !stopped ? song.art : "assets/background.png";
     document.body.style.backgroundImage = `url(${bg})`;
+    if (document.getElementById("bgA") && document.getElementById("bgA")) {
+      document.getElementById("bgA").style.backgroundImage = `url(${bg})`;
+      document.getElementById("bgB").style.backgroundImage = `url(${bg})`;
+    }
+
+    // document.documentElement.style.setProperty("--artwork", `url(${bg})`);
   }
 </script>
+
 <main>
+  <div id="background-container">
+    <img id="bgA" class="background-artwork a" alt="music background" />
+    <img id="bgB" class="background-artwork b" alt="music background" />
+  </div>
   {#if socket}
     <div id="content-container">
       <div transition:scale={{ duration: 600, start: 0.9 }} class="player">
-        <img class="cover" src={ !stopped ? song.art : "assets/stopped.png" } style="transform: scale({ !paused ? 1 : 0.8 });" alt="cover art">
-        <p class="spacer"></p>
-        <h1>{@html (!stopped ? song.title : "Nothing") }</h1>
-        <h2>{@html (!stopped ? song.creator : "Nobody") }</h2>
-        <p class="spacer"></p>
+        <img
+          class="cover"
+          src={!stopped ? song.art : "assets/stopped.png"}
+          style="transform: scale({!paused ? 1 : 0.8});"
+          alt="cover art"
+        />
+        <p class="spacer" />
+        <h1>{@html !stopped ? song.title : "Nothing"}</h1>
+        <h2>{@html !stopped ? song.creator : "Nobody"}</h2>
+        <p class="spacer" />
         <div class="progress-bar-container">
-          <input bind:value={elapsedPercent} class="progress-bar" type="range">
-          <div class="progress-bar-fill" style="width: {elapsedPercent}%"></div>
+          <input bind:value={elapsedPercent} class="progress-bar" type="range" />
+          <div class="progress-bar-fill" style="width: {elapsedPercent}%" />
         </div>
         <div class="timestamp-container">
           <p id="elapsed" class="timestamp">0:52</p>
           <p id="remaining" class="timestamp">-1:57</p>
         </div>
         <div class="controls-container">
-          <input disabled={stopped} on:click={rewind} src="icons/rewind.png" class="secondary control-button" alt="rewind" type="image">
-          <input disabled={stopped} on:click={togglePaused} src={(paused || stopped) ? "icons/play.png" : "icons/pause.png"} class="primary control-button" alt="play" type="image">
-          <input disabled={stopped} on:click={skip} src="icons/fastforward.png" class="secondary control-button" alt="fast forward" type="image">
+          <input
+            disabled={stopped}
+            on:click={rewind}
+            src="icons/rewind.png"
+            class="secondary control-button"
+            alt="rewind"
+            type="image"
+          />
+          <input
+            disabled={stopped}
+            on:click={togglePaused}
+            src={paused || stopped ? "icons/play.png" : "icons/pause.png"}
+            class="primary control-button"
+            alt="play"
+            type="image"
+          />
+          <input
+            disabled={stopped}
+            on:click={skip}
+            src="icons/fastforward.png"
+            class="secondary control-button"
+            alt="fast forward"
+            type="image"
+          />
         </div>
-        <p class="spacer"></p>
+        <p class="spacer" />
         <div class="volume-section">
-          <img class="volume-icon" src="icons/sound-empty.png" alt="empty sound">
+          <img class="volume-icon" src="icons/sound-empty.png" alt="empty sound" />
           <div id="volume-bar-container" class="progress-bar-container">
-            <input on:change={onVolumeChange} id="volume-bar" bind:value={volume} class="progress-bar" type="range">
-            <div class="progress-bar-fill" style="width: {volume}%"></div>
+            <input
+              on:change={onVolumeChange}
+              id="volume-bar"
+              bind:value={volume}
+              class="progress-bar"
+              type="range"
+            />
+            <div class="progress-bar-fill" style="width: {volume}%" />
           </div>
-          <img class="volume-icon" src="icons/sound-full.png" alt="full sound">
+          <img class="volume-icon" src="icons/sound-full.png" alt="full sound" />
         </div>
-        <p class="spacer"></p>
+        <p class="spacer" />
         <div class="misc-controls-container">
-          <input id="toggle-lyrics" disabled={stopped || !song.lyrics} on:click={toggleLyricsShown} class="misc-control-button" src="icons/lyrics.png" alt="toggle lyrics" type="image">
-          <input class="misc-control-button" src="icons/wave.png" alt="toggle lyrics" type="image">
-          <input class="misc-control-button" src="icons/queue.png" alt="toggle lyrics" type="image">
+          <input
+            id="toggle-lyrics"
+            disabled={stopped || !song.lyrics}
+            on:click={toggleLyricsShown}
+            class="misc-control-button"
+            src="icons/lyrics.png"
+            alt="toggle lyrics"
+            type="image"
+          />
+          <input
+            class="misc-control-button"
+            src="icons/wave.png"
+            alt="toggle lyrics"
+            type="image"
+          />
+          <input
+            class="misc-control-button"
+            src="icons/queue.png"
+            alt="toggle lyrics"
+            type="image"
+          />
         </div>
       </div>
       {#if !stopped && song && song.lyrics && showLyrics}
-      <!-- transition:fly="{{ x: -200, duration: 500 }}" -->
+        <!-- transition:fly="{{ x: -200, duration: 500 }}" -->
         <div class="lyrics" id="lyrics">
-          {#each song.lyrics as { time, words }, i (time) }
-          <p class="lyric {i === nowLyricIndex ? 'main-lyric' : ''}">
-            { words }
-          </p>
+          {#each song.lyrics as { time, words }, i (time)}
+            <p class="lyric {i === nowLyricIndex ? 'main-lyric' : ''}">
+              {words}
+            </p>
           {/each}
         </div>
       {/if}
     </div>
   {:else}
-    <h1 transition:blur={{ duration: 400 }} class='socketMessage'>{ socketMessage }</h1>
+    <h1 transition:blur={{ duration: 400 }} class="socketMessage">{socketMessage}</h1>
   {/if}
 </main>
+
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
+  @import url("https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap");
   :global(body) {
-    background: #949D4E;
+    background: #949d4e;
     transition: background 2s ease-out;
+    /* background-image: var(--artwork); */
     background-size: 100vmax;
     background-position: center;
-    -webkit-backdrop-filter: blur(60px) brightness(60%);;
+    -webkit-backdrop-filter: blur(60px) brightness(60%);
     backdrop-filter: blur(90px) brightness(30%);
+    overflow: hidden;
   }
 
   main {
@@ -153,13 +219,55 @@ import { onMount } from "svelte";
     overflow: hidden;
   }
 
+  @keyframes rotateBg {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+
+  #background-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: -1;
+  }
+
+  .background-artwork {
+    position: absolute;
+    width: 200%;
+    aspect-ratio: 1 / 1;
+    filter: brightness(0.5) blur(180px) saturate(1.2) contrast(1);
+    background-size: 100%;
+    background-repeat: no-repeat;
+    transition: background 2s ease-out;
+  }
+
+  .background-artwork.a {
+    top: 0;
+    left: 0;
+    animation: rotateBg 35s linear infinite;
+    pointer-events: none;
+  }
+
+  .background-artwork.b {
+    bottom: 0;
+    right: 0;
+    animation: rotateBg 35s linear infinite;
+    pointer-events: none;
+  }
+
   input:disabled {
     opacity: 0.4;
     cursor: not-allowed;
   }
 
   .spacer {
-    margin-top: 8%
+    margin-top: 8%;
   }
 
   .socketMessage {
@@ -182,8 +290,20 @@ import { onMount } from "svelte";
     display: flex;
     -ms-overflow-style: none;
     scrollbar-width: none;
-    -webkit-mask-image: linear-gradient(0deg, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 1) 12%, rgba(0, 0, 0, 1) 88%, rgba(255, 255, 255, 0) 100%);
-    mask-image: linear-gradient(0deg, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 1) 12%, rgba(0, 0, 0, 1) 88%, rgba(255, 255, 255, 0) 100%);
+    -webkit-mask-image: linear-gradient(
+      0deg,
+      rgba(0, 0, 0, 0) 0%,
+      rgba(0, 0, 0, 1) 12%,
+      rgba(0, 0, 0, 1) 88%,
+      rgba(255, 255, 255, 0) 100%
+    );
+    mask-image: linear-gradient(
+      0deg,
+      rgba(0, 0, 0, 0) 0%,
+      rgba(0, 0, 0, 1) 12%,
+      rgba(0, 0, 0, 1) 88%,
+      rgba(255, 255, 255, 0) 100%
+    );
     overflow-y: scroll;
     overflow-x: hidden;
     flex-direction: column;
@@ -211,7 +331,7 @@ import { onMount } from "svelte";
     transform: scale(1);
     transition: all 0.2s cubic-bezier(0.165, 0.84, 0.44, 1) 0s;
     text-shadow: none;
-    color: #FFFFFF;
+    color: #ffffff;
   }
 
   .player {
@@ -235,7 +355,7 @@ import { onMount } from "svelte";
   .progress-bar-container {
     position: relative;
     height: 4px;
-    width: 100%
+    width: 100%;
   }
 
   .progress-bar {
@@ -256,7 +376,7 @@ import { onMount } from "svelte";
     width: 10px;
     height: 10px;
     border-radius: 50%;
-    background: #FFFFFF;
+    background: #ffffff;
     cursor: pointer;
     -webkit-box-shadow: 0px 0px 20px 0px rgba(0, 0, 0, 0.8);
     box-shadow: 0px 0px 20px 0px rgba(0, 0, 0, 0.8);
@@ -267,7 +387,7 @@ import { onMount } from "svelte";
   }
 
   #volume-bar::-webkit-slider-thumb {
-    transition: transform 0.1s cubic-bezier(0.23, 1, 0.320, 1);
+    transition: transform 0.1s cubic-bezier(0.23, 1, 0.32, 1);
     width: 15px;
     height: 15px;
   }
@@ -288,7 +408,7 @@ import { onMount } from "svelte";
     width: 50%;
     height: 4px;
     border-radius: 2px;
-    background: #FFFFFF;
+    background: #ffffff;
     z-index: 0;
   }
 
@@ -312,10 +432,10 @@ import { onMount } from "svelte";
   }
 
   .timestamp {
-    font-family: 'Roboto', sans-serif;
+    font-family: "Roboto", sans-serif;
     font-size: 0.8em;
     margin: 0;
-    color: #FFFFFF;
+    color: #ffffff;
     opacity: 0.6;
   }
 
@@ -371,7 +491,7 @@ import { onMount } from "svelte";
   h1,
   h2,
   p {
-    font-family: 'Roboto', sans-serif;
+    font-family: "Roboto", sans-serif;
   }
 
   h1,
@@ -383,11 +503,11 @@ import { onMount } from "svelte";
 
   h1 {
     font-weight: 700;
-    color: #FFFFFF;
+    color: #ffffff;
   }
 
   h2 {
     font-weight: 400;
-    color: #B5B5B5;
+    color: #b5b5b5;
   }
 </style>
